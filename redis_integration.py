@@ -1,4 +1,3 @@
-# Lucas Justiniano
 # 1.6 Group Project - Redis Integration
 # Date: September 3, 2026
 
