@@ -1024,36 +1024,38 @@ def commit_word_report(database):
             print(word, ":", counts[word])
     return option_finished()
             
-def Help
-if choice == "12":
+def Help():
+    print()
+    print("1. Templates")
+    print("2. FAQ")
+
+    HelpChoice = input("Enter 1 for Templates or 2 for FAQ: ")
+
+    if HelpChoice == "1":
         print()
-        print("1. Templates")
-        print("2. FAQ")
+        print("Templates")
+        print("Full record ID input Reference: github:archive:Sample_Repos:[IDENTIFYING_VALUE]")
+        print("Repository full record ID reference: github:archive:Sample_Repos:[OWNER/REPOSITORY]")
 
-        HelpChoice = input("Enter 1 for Templates or 2 for FAQ: ")
+    elif HelpChoice == "2":
+        print()
+        print("FAQ")
+        print("Question 1: How to import files?")
+        print("Question 2: Why doesn't pymongo work?")
 
-        if HelpChoice == "1":
-            
-            print()
-            print("Templates")
-            print("Full record ID input Refference: github:archive:Sample_Repos:[IDENTIFYING_VALUE]")
-            print("Repository full record ID reference: github:archive:Sample_Repos:[OWNER/REPOSITORY]")
+        QuestionChoice = input("Enter 1 or 2: ")
 
-        if HelpChoice == "2":
-            print()
-            print("FAQ")      
-            print("Question 1: How to import files?")
-            print("Question 2: Why doesn't pymongo work?")
+        if QuestionChoice == "1":
+            print("When importing files or archives, verify the full path to ensure proper records are imported into MongoDB. The current archive used in MongoDB Compass is set as group2_github_archive.")
+            print("If you want this changed, locate connect_to_mongodb() and modify the database name or connection address.")
 
-            QuestionChoice = input("Enter 1 or 2: ")
+        elif QuestionChoice == "2":
+            print("Please verify that you have the imports installed using: python -m pip install redis pymongo")
 
-            if QuestionChoice == "1":
-                print("When importing files or archives verify full path to ensure proper records are imported into MONGODB  the current archive used on MONGODB compass is set as group2_github_archive.")
-                print("Should user want this changed locate function def connect_to_mongodb() and modify db=myclient as well as connection_address if using different hostnumber")
+    else:
+        print("Invalid help choice.")
 
-            if QuestionChoice == "2":
-                print("please verify on command prompt that you have the imports installed using Python -m pip install redis pymongo")
-return option_finished()
+    return option_finished()
 
 def mongodb_menu():
     database = connect_to_mongodb()
