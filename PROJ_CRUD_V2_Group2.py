@@ -1,4 +1,4 @@
-"""Group 2 redis and mongodb program v3"""
+"""Group 2 redis and mongodb program v2.1 added FAQ func"""
 ##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--##
 import json
 import os
