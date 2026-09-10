@@ -1023,7 +1023,37 @@ def commit_word_report(database):
         for word in top_words:
             print(word, ":", counts[word])
     return option_finished()
+            
+def Help
+if choice == "12":
+        print()
+        print("1. Templates")
+        print("2. FAQ")
 
+        HelpChoice = input("Enter 1 for Templates or 2 for FAQ: ")
+
+        if HelpChoice == "1":
+            
+            print()
+            print("Templates")
+            print("Full record ID input Refference: github:archive:Sample_Repos:[IDENTIFYING_VALUE]")
+            print("Repository full record ID reference: github:archive:Sample_Repos:[OWNER/REPOSITORY]")
+
+        if HelpChoice == "2":
+            print()
+            print("FAQ")      
+            print("Question 1: How to import files?")
+            print("Question 2: Why doesn't pymongo work?")
+
+            QuestionChoice = input("Enter 1 or 2: ")
+
+            if QuestionChoice == "1":
+                print("When importing files or archives verify full path to ensure proper records are imported into MONGODB  the current archive used on MONGODB compass is set as group2_github_archive.")
+                print("Should user want this changed locate function def connect_to_mongodb() and modify db=myclient as well as connection_address if using different hostnumber")
+
+            if QuestionChoice == "2":
+                print("please verify on command prompt that you have the imports installed using Python -m pip install redis pymongo")
+return option_finished()
 
 def mongodb_menu():
     database = connect_to_mongodb()
@@ -1063,6 +1093,8 @@ def mongodb_menu():
                     result = watch_count_report(database)
                 elif choice == "11":
                     result = commit_word_report(database)
+                elif choice == "12":
+                    result = Help()
                 elif choice == "0":
                     app_cont = False
                 else:
