@@ -1029,13 +1029,16 @@ def Help():
     print("1. Templates")
     print("2. FAQ")
 
-    HelpChoice = input("Enter 1 for Templates or 2 for FAQ: ")
+            HelpChoice, action = get_user_input("Enter 1 for Templates or 2 for FAQ: ")
+            if action !="continue":
+                        return action
 
     if HelpChoice == "1":
         print()
         print("Templates")
         print("Full record ID input Reference: github:archive:Sample_Repos:[IDENTIFYING_VALUE]")
         print("Repository full record ID reference: github:archive:Sample_Repos:[OWNER/REPOSITORY]")
+            return option_finished()
 
     elif HelpChoice == "2":
         print()
@@ -1043,19 +1046,23 @@ def Help():
         print("Question 1: How to import files?")
         print("Question 2: Why doesn't pymongo work?")
 
-        QuestionChoice = input("Enter 1 or 2: ")
+                QuestionChoice, action = get_user_input("Enter 1 or 2")
+                if action != "continue":
+                    return action
 
         if QuestionChoice == "1":
             print("When importing files or archives, verify the full path to ensure proper records are imported into MongoDB. The current archive used in MongoDB Compass is set as group2_github_archive.")
             print("If you want this changed, locate connect_to_mongodb() and modify the database name or connection address.")
-
+                    return option_finished()
         elif QuestionChoice == "2":
             print("Please verify that you have the imports installed using: python -m pip install redis pymongo")
+                    return option_finished()
 
-    else:
-        print("Invalid help choice.")
+                else:
+                    print("Error: Enter 1 or 2, B to return to the database menu, or E to exit.")
 
-    return option_finished()
+        else:
+            print("Error: Enter 1 or 2, B to return to the database menu, or E to exit.")
 
 def mongodb_menu():
     database = connect_to_mongodb()
