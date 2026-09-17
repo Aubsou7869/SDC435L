@@ -1125,13 +1125,11 @@ def mongodb_menu():
 
 #***CASSANDRA section begins here***#
 #Make sure to install the Python cassandra-driver: python -m pip install cassandra-driver to ensure it runs on your system
-#A Cassandra server must also be running at 127.0.0.1 on port 9042.
 #chose to change up the organization and have cassandra driver imported only when Cassandra is selected. This seems to work well and we should consider this option for future db sections if anyh issues arise or we want to clean up the programs code blocks
 #Storage: one table per dataset, with these two columns:
 #record_id text PRIMARY KEY  -- the same stable ID used by the other menus
 #record_json text   -- the complete origin record as JSON text
 # Search, grouping, and export are the three extra feats similar to our past functions and the help/faq will also give some good reference for any standard issues thought of, free to append if anyone has other ideas.
-# Import automatically defauts to 100 recs this also starts at the beginning of the file.
 
 
 def connect_to_cassandra():
