@@ -1,5 +1,5 @@
-"""Group 2 redis and mongodb program v2.1 added FAQ func"""
-##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--##
+"""Group 2 redis, mongodb,Cassandra program v3 now includes Cassandra section"""
+##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--## #also run python -m pip install cassandra-driver
 import json
 import os
 import redis
