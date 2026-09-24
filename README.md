@@ -39,7 +39,7 @@ Further Instruction: Current program model allows user to select to run either R
 The application uses the GitHub Archive JSON data that is in the main branch. The dataset contains repository information, including repository names and watch counts.
 
 ### Project Files:
-- `Proj_CRUD_V2_Group3.py` - Main menu for the Redis JSON application
+- `Proj_CRUD_V4_Group3.py` - Main menu for the JSON Database application
 - `redis_integration.py` - Python application used to connect to Redis and perform database operations
 - `README.md` - Project documentation
 
