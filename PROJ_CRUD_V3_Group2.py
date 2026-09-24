@@ -1539,6 +1539,530 @@ def cassandra_menu():
         database.cluster.shutdown()
     print("Cassandra session ended. Goodbye.")
 
+#***Neo4j section begins here***#
+#MAKE SURE YOUR NEO4J IS ACTIVE AND RUNNING CORRECT IN ORDER TO MAKE THIS WORK
+import json
+from neo4j import GraphDatabase
+
+# Connection information for local Neo4j database
+URI = "neo4j://localhost:7687"
+AUTH = ("neo4j", "password1")
+
+# Connect to Neo4j
+print("Connecting to local Neo4j database...")
+
+driver = GraphDatabase.driver(URI, auth=AUTH)
+session = driver.session(database="neo4j")
+
+
+
+# CREATE SECTION
+# Import JSON data and create nodes and relationships
+
+def importData():
+
+    print("\nImporting data from file...")
+
+    try:
+        for line in open("dataset_en_dev.json", "r"):
+
+            data = json.loads(line)
+
+            #Get information from the JSON file
+            category = data["product_category"]
+            product = data["product_id"]
+            reviewID = data["review_id"]
+            reviewer = data["reviewer_id"]
+            title = data["review_title"]
+            content = data["review_body"]
+            stars = int(data["stars"])
+
+            #Create Category node
+            session.run("""
+                MERGE (c:Category {name:$category})
+            """, category=category)
+
+            #Create Product node
+            session.run("""
+                MERGE (p:Product {name:$product})
+            """, product=product)
+
+            #Create Reviewer node
+            session.run("""
+                MERGE (r:Reviewer {name:$reviewer})
+            """, reviewer=reviewer)
+
+            #Create Review node
+            session.run("""
+                MERGE (r:Review {review_id:$reviewID})
+                SET r.title = $title,
+                    r.content = $content,
+                    r.stars = $stars
+            """,
+                reviewID=reviewID,
+                title=title,
+                content=content,
+                stars=stars
+            )
+
+            #Create relationship between Reviewer and Review
+            session.run("""
+                MATCH (reviewer:Reviewer {name:$reviewer})
+                MATCH (review:Review {review_id:$reviewID})
+                MERGE (reviewer)-[:WROTE]->(review)
+            """,
+                reviewer=reviewer,
+                reviewID=reviewID
+            )
+
+            #Create relationship between Product and Category
+            session.run("""
+                MATCH (product:Product {name:$product})
+                MATCH (category:Category {name:$category})
+                MERGE (product)-[:IN_CATEGORY]->(category)
+            """,
+                product=product,
+                category=category
+            )
+
+            #Create relationship between Product and Review
+            session.run("""
+                MATCH (product:Product {name:$product})
+                MATCH (review:Review {review_id:$reviewID})
+                MERGE (product)-[:HAS_REVIEW]->(review)
+            """,
+                product=product,
+                reviewID=reviewID
+            )
+
+        print("Data imported successfully!")
+
+    except FileNotFoundError:
+        print("Error: dataset_en_dev.json was not found.")
+
+
+
+# CREATE SECTION
+# Allow user to create their own node
+
+def createNode():
+
+    print("\Create a Node")
+    print("1. Category")
+    print("2. Product")
+    print("3. Review")
+    print("4. Reviewer")
+
+    choice = input("Choose a node type: ")
+
+    if choice == "1":
+
+        name = input("Enter category name: ")
+
+        session.run("""
+            CREATE (:Category {name:$name})
+        """, name=name)
+
+        print("Category node created.")
+
+    elif choice == "2":
+
+        name = input("Enter product name: ")
+
+        session.run("""
+            CREATE (:Product {name:$name})
+        """, name=name)
+
+        print("Product node created.")
+
+    elif choice == "3":
+
+        title = input("Enter review title: ")
+        content = input("Enter review content: ")
+        stars = int(input("Enter number of stars: "))
+
+        session.run("""
+            CREATE (:Review {
+                title:$title,
+                content:$content,
+                stars:$stars
+            })
+        """,
+            title=title,
+            content=content,
+            stars=stars
+        )
+
+        print("Review node created.")
+
+    elif choice == "4":
+
+        name = input("Enter reviewer name or reviewer ID: ")
+
+        session.run("""
+            CREATE (:Reviewer {name:$name})
+        """, name=name)
+
+        print("Reviewer node created.")
+
+    else:
+        print("Invalid choice.")
+
+
+
+# CREATE SECTION
+# Allow user to create relationships
+
+def createRelationship():
+
+    print("Create a Relationship")
+    print("1. Product to Category")
+    print("2. Product to Review")
+
+    choice = input("Choose relationship type: ")
+
+    if choice == "1":
+
+        product = input("Enter product name: ")
+        category = input("Enter category name: ")
+
+        result = session.run("""
+            MATCH (p:Product {name:$product})
+            MATCH (c:Category {name:$category})
+            MERGE (p)-[:IN_CATEGORY]->(c)
+            RETURN p
+        """,
+            product=product,
+            category=category
+        )
+
+        if result.single():
+            print("Product to Category relationship created.")
+        else:
+            print("Product or Category was not found.")
+
+    elif choice == "2":
+
+        product = input("Enter product name: ")
+        reviewTitle = input("Enter review title: ")
+
+        result = session.run("""
+            MATCH (p:Product {name:$product})
+            MATCH (r:Review {title:$title})
+            MERGE (p)-[:HAS_REVIEW]->(r)
+            RETURN p
+        """,
+            product=product,
+            title=reviewTitle
+        )
+
+        if result.single():
+            print("Product to Review relationship created.")
+        else:
+            print("Product or Review was not found.")
+
+    else:
+        print("Invalid choice.")
+
+
+
+# READ SECTION
+# Count products related to a category
+
+def categoryCount():
+
+    category = input("\nEnter category name: ")
+
+    result = session.run("""
+        MATCH (p:Product)-[:IN_CATEGORY]->(c:Category {name:$category})
+        RETURN count(p) AS total
+    """, category=category)
+
+    record = result.single()
+
+    print("Number of products in", category, ":", record["total"])
+
+
+
+# READ SECTION
+# Count reviews related to a reviewer
+
+def reviewerCount():
+
+    reviewer = input("\nEnter reviewer name (reviewer_id): ")
+
+    result = session.run("""
+        MATCH (r:Reviewer {name:$reviewer})-[:WROTE]->(review:Review)
+        RETURN count(review) AS total
+    """, reviewer=reviewer)
+
+    record = result.single()
+
+    print("Number of reviews for", reviewer, ":", record["total"])
+
+
+
+# UPDATE SECTION
+# Update a node
+
+def updateNode():
+
+    print("Update a Node")
+    print("1. Category")
+    print("2. Product")
+    print("3. Reviewer")
+    print("4. Review")
+
+    choice = input("Choose node type to update: ")
+
+    if choice == "1":
+
+        oldName = input("Enter current category name: ")
+        newName = input("Enter new category name: ")
+
+        session.run("""
+            MATCH (c:Category {name:$oldName})
+            SET c.name = $newName
+        """, oldName=oldName, newName=newName)
+
+        print("Category updated.")
+
+    elif choice == "2":
+
+        oldName = input("Enter current product name: ")
+        newName = input("Enter new product name: ")
+
+        session.run("""
+            MATCH (p:Product {name:$oldName})
+            SET p.name = $newName
+        """, oldName=oldName, newName=newName)
+
+        print("Product updated.")
+
+    elif choice == "3":
+
+        oldName = input("Enter current reviewer name: ")
+        newName = input("Enter new reviewer name: ")
+
+        session.run("""
+            MATCH (r:Reviewer {name:$oldName})
+            SET r.name = $newName
+        """, oldName=oldName, newName=newName)
+
+        print("Reviewer updated.")
+
+    elif choice == "4":
+
+        title = input("Enter review title: ")
+        newContent = input("Enter new review content: ")
+        newStars = int(input("Enter new number of stars: "))
+
+        session.run("""
+            MATCH (r:Review {title:$title})
+            SET r.content = $content,
+                r.stars = $stars
+        """,
+            title=title,
+            content=newContent,
+            stars=newStars
+        )
+
+        print("Review updated.")
+
+    else:
+        print("Invalid choice.")
+
+
+
+# DELETE SECTION
+# Delete a Category node
+
+def deleteCategory():
+
+    category = input("\nEnter category name to delete: ")
+
+    session.run("""
+        MATCH (c:Category {name:$category})
+        DETACH DELETE c
+    """, category=category)
+
+    print("Category deleted.")
+
+
+
+# DELETE SECTION
+# Delete all relationships
+
+def deleteRelationships():
+
+    session.run("""
+        MATCH ()-[r]->()
+        DELETE r
+    """)
+
+    print("All relationships deleted.")
+
+
+
+# DELETE SECTION
+# Delete all nodes
+
+def deleteNodes():
+
+    session.run("""
+        MATCH (n)
+        DELETE n
+    """)
+
+    print("All nodes deleted.")
+
+
+#Feature 1
+#Display all category nodes
+    
+def showCategories():
+
+    print("\n--- All Categories ---")
+
+    result = session.run("""
+        MATCH (c:Category)
+        RETURN c.name AS category
+        ORDER BY c.name
+    """)
+
+    for record in result:
+        print(record["category"])
+
+
+
+# FEATURE 2
+# Display products that belong to a category
+
+def showProductsByCategory():
+
+    category = input("\nEnter category name: ")
+
+    result = session.run("""
+        MATCH (p:Product)-[:IN_CATEGORY]->(c:Category {name:$category})
+        RETURN p.name AS product
+    """, category=category)
+
+    print("\nProducts in", category)
+
+    found = False
+
+    for record in result:
+        print(record["product"])
+        found = True
+
+    if found == False:
+        print("No products were found.")
+
+
+
+# FEATURE 3
+# Display reviews based on star rating
+
+def showReviewsByStars():
+
+    stars = int(input("\nEnter star rating (1-5): "))
+
+    result = session.run("""
+        MATCH (r:Review)
+        WHERE r.stars = $stars
+        RETURN r.title AS title, r.content AS content
+        LIMIT 10
+    """, stars=stars)
+
+    print("\nReviews with", stars, "stars:")
+
+    found = False
+
+    for record in result:
+
+        print("\nTitle:", record["title"])
+        print("Review:", record["content"])
+
+        found = True
+
+    if found == False:
+        print("No reviews were found.")
+
+
+# MAIN MENU
+def main():
+
+    while True:
+
+        print("       NEO4J CRUD MENU")
+        print("1. Import JSON Data")
+        print("2. Create Your Own Node")
+        print("3. Create a Relationship")
+        print("4. Count Products by Category")
+        print("5. Count Reviews by Reviewer")
+        print("6. Update a Node")
+        print("7. Delete a Category")
+        print("8. Delete All Relationships")
+        print("9. Delete All Nodes")
+        #Additional features
+        print("10. Show All Categories")
+        print("11. Show Products by Category")
+        print("12. Show Reviews by Star Rating")
+        print("13. Exit")
+
+        choice = input("\nEnter your choice: ")
+
+        if choice == "1":
+            importData()
+
+        elif choice == "2":
+            createNode()
+
+        elif choice == "3":
+            createRelationship()
+
+        elif choice == "4":
+            categoryCount()
+
+        elif choice == "5":
+            reviewerCount()
+
+        elif choice == "6":
+            updateNode()
+
+        elif choice == "7":
+            deleteCategory()
+
+        elif choice == "8":
+            deleteRelationships()
+
+        elif choice == "9":
+            deleteNodes()
+
+        elif choice == "10":
+            showCategories()
+
+        elif choice == "11":
+            showProductsByCategory()
+
+        elif choice == "12":
+            showReviewsByStars()
+
+        elif choice == "13":
+            print("Closing program.")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+
+# Start the program
+main()
+
+# Close Neo4j connection
+session.close()
+driver.close()
+
 
 
 def main():
@@ -1547,6 +2071,7 @@ def main():
         print("1) Redis")
         print("2) MongoDB")
         print("3) Cassandra")
+        print("4) Neo4j")
         print("0) Exit Application")
         choice = input("Select a database: ").strip().upper()
         if choice == "1":
@@ -1558,10 +2083,13 @@ def main():
         elif choice == "3":
             cassandra_menu()
             break
+        elif choice == "4":
+            neo4j_menu()
+            break        
         elif choice in ["0", "E"]:
             break
         else:
-            print("Please select your desired database. enter 1, 2, 3, or 0.")
+            print("Please select your desired database. enter 1, 2, 3, 4, or 0.")
     print("APPLICATION EXITED. GOODBYE.")
 
 
