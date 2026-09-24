@@ -1,11 +1,14 @@
 # SDC435L Group Project
 
-## GitHub Archive Redis, Cassandra, MONGODB Application##
+## GitHub Archive Redis, Cassandra, MONGODB, Neo4j Application##
 
 This project is a Python application that connects to a Redis key-value database, MONGO database, and the Cassandra database working with the GitHub Archive repository data provided.
 
 Further Instruction: Current program model allows user to select to run either Redis or Cassandra if on UBUNTU with the respected db cassandra or redis set up and running OR MONGODB if on windows with mongo compass connected and running. Before running python program please be sure pymongo and redis are installed by opening command prompt and typing the following " python -m pip install redis pymongo or python -m pip install cassandra-driver 
 
+- Redis starts at line 1
+- MongoDB starts at Line 571
+- Cassandra starts at Line 1126
 - Neo4j starts at Line 1542
 
 ### Features:
