@@ -2,8 +2,8 @@
 ##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--## #also run python -m pip install cassandra-driver
 import json
 import os
-import redis
-import pymongo
+#import redis
+#import pymongo
 
 #Sep datasets i/o to stop sample and full records from overwrting each other.
 DATASETS = ["Commits", "Contents", "Files", "Languages", "Licenses",
@@ -87,6 +87,14 @@ def option_finished():
 # Function for the Redis database connection sequence.
 def connect_to_database():
     """Connect to a Redis database running on this system."""
+    global redis
+
+    try:
+        import redis
+    except ImportError:
+        print("Redis library is not installed.")
+        print("Install it with: python -m pip install redis")
+        return None
 
     try:
         database = redis.Redis(
@@ -597,6 +605,15 @@ def create_mongo_indexes(database):
 
 
 def connect_to_mongodb():
+    global pymongo
+
+    try:
+        import pymongo
+    except ImportError:
+        print("PyMongo is not installed.")
+        print("Install it with: python -m pip install pymongo")
+        return None
+
     print("Connecting to local Mongo database...")
 
     # using localhost:27017
@@ -1023,7 +1040,7 @@ def commit_word_report(database):
         for word in top_words:
             print(word, ":", counts[word])
     return option_finished()
-            
+
 def Help():
     print()
     print("1. Templates")
@@ -1054,7 +1071,7 @@ def Help():
             print("When importing files or archives, verify the full path to ensure proper records are imported into MongoDB. The current archive used in MongoDB Compass is set as group2_github_archive.")
             print("If you want this changed, locate connect_to_mongodb() and modify the database name or connection address.")
             return option_finished()
-        
+
         elif QuestionChoice == "2":
             print("Please verify that you have the imports installed using: python -m pip install redis pymongo")
             return option_finished()
@@ -1542,17 +1559,13 @@ def cassandra_menu():
 #***Neo4j section begins here***#
 #MAKE SURE YOUR NEO4J IS ACTIVE AND RUNNING CORRECT IN ORDER TO MAKE THIS WORK
 import json
-from neo4j import GraphDatabase
 
 # Connection information for local Neo4j database
 URI = "neo4j://localhost:7687"
 AUTH = ("neo4j", "password1")
 
-# Connect to Neo4j
-print("Connecting to local Neo4j database...")
-
-driver = GraphDatabase.driver(URI, auth=AUTH)
-session = driver.session(database="neo4j")
+session = None
+driver = None
 
 
 
@@ -1647,7 +1660,7 @@ def importData():
 
 def createNode():
 
-    print("\Create a Node")
+    print("\nCreate a Node")
     print("1. Category")
     print("2. Product")
     print("3. Review")
@@ -1919,7 +1932,7 @@ def deleteNodes():
 
 #Feature 1
 #Display all category nodes
-    
+
 def showCategories():
 
     print("\n--- All Categories ---")
@@ -1991,6 +2004,24 @@ def showReviewsByStars():
 
 # MAIN MENU
 def neo4j_menu():
+    global driver, session
+
+    try:
+        from neo4j import GraphDatabase
+    except ImportError:
+        print("Neo4j driver is not installed.")
+        print("Install it with: python -m pip install neo4j")
+        return
+
+    print("Connecting to local Neo4j database...")
+    try:
+        driver = GraphDatabase.driver(URI, auth=AUTH)
+        driver.verify_connectivity()
+        session = driver.session(database="neo4j")
+        print("Neo4j connection successful.")
+    except Exception as error:
+        print("Unable to connect to Neo4j:", error)
+        return
 
     while True:
 
@@ -2055,102 +2086,97 @@ def neo4j_menu():
         else:
             print("Invalid choice. Please try again.")
 
+    session.close()
+    driver.close()
+    session = None
+    driver = None
 
-# Start the program
-main()
 
-# Close Neo4j connection
-session.close()
-driver.close()
-
-#SQL Database
+#SQL Database starts here
 import sqlite3
 import json
 
-#Connect to the SQLite database
-print("Connecting to local SQLite database...")
-db = sqlite3.connect("EN_ReviewData.db")
-db.execute("PRAGMA foreign_keys = ON;")
+db = None
 
-# *** CREATE SECTION ***
-#Create the Reviewers table
-db.execute("""
-CREATE TABLE IF NOT EXISTS Reviewers (
-    reviewer_id TEXT PRIMARY KEY
-);
-""")
+def connect_to_sql():
+    print("Connecting to local SQLite database...")
+    database = sqlite3.connect("EN_ReviewData.db")
+    database.execute("PRAGMA foreign_keys = ON;")
 
-#Create the Categories table
-db.execute("""
-CREATE TABLE IF NOT EXISTS Categories (
-    product_category TEXT PRIMARY KEY
-);
-""")
+    database.execute("""
+    CREATE TABLE IF NOT EXISTS Reviewers (
+        reviewer_id TEXT PRIMARY KEY
+    );
+    """)
 
-#Create the Products table
-db.execute("""
-CREATE TABLE IF NOT EXISTS Products (
-    product_id TEXT PRIMARY KEY,
-    product_category TEXT,
-    FOREIGN KEY(product_category) REFERENCES Categories(product_category)
-);
-""")
+    database.execute("""
+    CREATE TABLE IF NOT EXISTS Categories (
+        product_category TEXT PRIMARY KEY
+    );
+    """)
 
-#Create the Reviews table
-db.execute("""
-CREATE TABLE IF NOT EXISTS Reviews (
-    review_id TEXT PRIMARY KEY,
-    product_id TEXT,
-    reviewer_id TEXT,
-    stars INTEGER,
-    review_body TEXT,
-    review_title TEXT,
-    FOREIGN KEY(product_id) REFERENCES Products(product_id),
-    FOREIGN KEY(reviewer_id) REFERENCES Reviewers(reviewer_id)
-);
-""")
+    database.execute("""
+    CREATE TABLE IF NOT EXISTS Products (
+        product_id TEXT PRIMARY KEY,
+        product_category TEXT,
+        FOREIGN KEY(product_category) REFERENCES Categories(product_category)
+    );
+    """)
 
-db.commit()
-print("Tables created successfully!")
+    database.execute("""
+    CREATE TABLE IF NOT EXISTS Reviews (
+        review_id TEXT PRIMARY KEY,
+        product_id TEXT,
+        reviewer_id TEXT,
+        stars INTEGER,
+        review_body TEXT,
+        review_title TEXT,
+        FOREIGN KEY(product_id) REFERENCES Products(product_id),
+        FOREIGN KEY(reviewer_id) REFERENCES Reviewers(reviewer_id)
+    );
+    """)
 
-#Insert data from the JSON file into the tables
-print("Importing data from file...")
+    database.commit()
+    print("Tables created successfully!")
 
-for line in open("dataset_en_dev.json", "r"):
-    dataSet = json.loads(line)
+    try:
+        print("Importing data from file...")
+        for line in open("dataset_en_dev.json", "r"):
+            dataSet = json.loads(line)
 
-    reviewer_id = dataSet["reviewer_id"]
-    product_category = dataSet["product_category"]
-    product_id = dataSet["product_id"]
-    review_id = dataSet["review_id"]
-    stars = int(dataSet["stars"])
-    review_body = dataSet["review_body"]
-    review_title = dataSet["review_title"]
+            reviewer_id = dataSet["reviewer_id"]
+            product_category = dataSet["product_category"]
+            product_id = dataSet["product_id"]
+            review_id = dataSet["review_id"]
+            stars = int(dataSet["stars"])
+            review_body = dataSet["review_body"]
+            review_title = dataSet["review_title"]
 
-    db.execute(
-        "INSERT OR IGNORE INTO Reviewers (reviewer_id) VALUES (?);",
-        (reviewer_id,)
-    )
+            database.execute(
+                "INSERT OR IGNORE INTO Reviewers (reviewer_id) VALUES (?);",
+                (reviewer_id,)
+            )
+            database.execute(
+                "INSERT OR IGNORE INTO Categories (product_category) VALUES (?);",
+                (product_category,)
+            )
+            database.execute(
+                "INSERT OR IGNORE INTO Products (product_id, product_category) VALUES (?, ?);",
+                (product_id, product_category)
+            )
+            database.execute(
+                """INSERT OR IGNORE INTO Reviews
+                (review_id, product_id, reviewer_id, stars, review_body, review_title)
+                VALUES (?, ?, ?, ?, ?, ?);""",
+                (review_id, product_id, reviewer_id, stars, review_body, review_title)
+            )
 
-    db.execute(
-        "INSERT OR IGNORE INTO Categories (product_category) VALUES (?);",
-        (product_category,)
-    )
+        database.commit()
+        print("Data imported successfully!")
+    except FileNotFoundError:
+        print("dataset_en_dev.json was not found. SQL opened without importing data.")
 
-    db.execute(
-        "INSERT OR IGNORE INTO Products (product_id, product_category) VALUES (?, ?);",
-        (product_id, product_category)
-    )
-
-    db.execute(
-        """INSERT OR IGNORE INTO Reviews
-        (review_id, product_id, reviewer_id, stars, review_body, review_title)
-        VALUES (?, ?, ?, ?, ?, ?);""",
-        (review_id, product_id, reviewer_id, stars, review_body, review_title)
-    )
-
-db.commit()
-print("Data imported successfully!")
+    return database
 
 
 # *** READ SECTION ***
@@ -2335,58 +2361,61 @@ def searchReviewTitles():
 
 #Main menu
 def sql_menu():
+    global db
 
-while True:
-    print("\n Welcome to the SQL Main Menu.")
-    print("1. Insert a new record")
-    print("2. Display product count per category")
-    print("3. Enter a query")
-    print("4. Delete reviews from a category")
-    print("5. Delete all tables")
-    print("6. Display reviews by star rating")
-    print("7. Display total number of reviews")
-    print("8. Search review titles")
-    print("9. Exit the program")
+    db = connect_to_sql()
 
-    menu = input()
+    while True:
+        print("\n Welcome to the SQL Main Menu.")
+        print("1. Insert a new record")
+        print("2. Display product count per category")
+        print("3. Enter a query")
+        print("4. Delete reviews from a category")
+        print("5. Delete all tables")
+        print("6. Display reviews by star rating")
+        print("7. Display total number of reviews")
+        print("8. Search review titles")
+        print("9. Exit the program")
 
-    if menu == "1":
-        insertRecord()
+        menu = input()
 
-    elif menu == "2":
-        displayProductCount()
+        if menu == "1":
+            insertRecord()
 
-    elif menu == "3":
-        enterQuery()
+        elif menu == "2":
+            displayProductCount()
 
-    elif menu == "4":
-        deleteReviews()
+        elif menu == "3":
+            enterQuery()
 
-    elif menu == "5":
-        deleteTables()
+        elif menu == "4":
+            deleteReviews()
 
-    elif menu == "6":
-        displayReviewsByStars()
+        elif menu == "5":
+            deleteTables()
 
-    elif menu == "7":
-        displayTotalReviews()
+        elif menu == "6":
+            displayReviewsByStars()
 
-    elif menu == "8":
-        searchReviewTitles()
+        elif menu == "7":
+            displayTotalReviews()
 
-    elif menu == "9":
-        print("Closing program...")
-        break
+        elif menu == "8":
+            searchReviewTitles()
 
-    else:
-        print("Invalid menu option.")
+        elif menu == "9":
+            print("Closing SQL menu...")
+            break
 
-#Close connection to database
-db.close()
+        else:
+            print("Invalid menu option.")
 
+    db.close()
+    db = None
 
 
 def main():
+
     while True:
         print("\nCHOOSE DATABASE")
         print("1) Redis")
@@ -2396,23 +2425,25 @@ def main():
         print("5) SQL")
         print("0) Exit Application")
         choice = input("Select a database: ").strip().upper()
+
         if choice == "1":
             redis_menu()
-            break
+
         elif choice == "2":
             mongodb_menu()
-            break
+
         elif choice == "3":
             cassandra_menu()
-            break
+
         elif choice == "4":
             neo4j_menu()
-            break
+
         elif choice == "5":
             sql_menu()
-            break        
+
         elif choice in ["0", "E"]:
             break
+
         else:
             print("Please select your desired database. enter 1, 2, 3, 4, 5, or 0.")
     print("APPLICATION EXITED. GOODBYE.")
@@ -2420,3 +2451,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
