@@ -1,8 +1,14 @@
 # SDC435L Group Project
 
+1. Why did you store the entire GitHub record as JSON text in Cassandra instead of storing the individual fields as Cassandra columns?
+
+2. What does IF NOT EXISTS accomplish in your Cassandra INSERT, and what does result.was_applied tell you?
+
+3. Your search and grouping functions read essentially the entire Cassandra table and perform the analysis in Python. Why did you choose to do that rather than design Cassandra queries for the operation?
+
 ## GitHub Archive Redis, Cassandra, MONGODB, Neo4j, SQL Application ##
 
-This project is a Python application that connects to a Redis key-value database, MONGO database, and the Cassandra database working with the GitHub Archive repository data provided.
+This project is a Python application that connects to a Redis key-value database, MONGO database, Cassandra database, Neo4j database, and the SQL database working with the GitHub Archive repository data provided.
 
 Further Instruction: Current program model allows user to select to run either Redis or Cassandra if on UBUNTU with the respected db cassandra or redis set up and running OR MONGODB if on windows with mongo compass connected and running. Before running python program please be sure pymongo and redis are installed by opening command prompt and typing the following " python -m pip install redis pymongo or python -m pip install cassandra-driver 
 
