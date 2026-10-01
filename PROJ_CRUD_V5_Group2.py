@@ -1990,7 +1990,7 @@ def showReviewsByStars():
 
 
 # MAIN MENU
-def main():
+def neo4j_menu():
 
     while True:
 
@@ -2334,8 +2334,9 @@ def searchReviewTitles():
         print(row)
 
 #Main menu
+def sql_Menu
 while True:
-    print("\n.")
+    print("\n Welcome to the SQL Main Menu.")
     print("1. Insert a new record")
     print("2. Display product count per category")
     print("3. Enter a query")
