@@ -2334,7 +2334,8 @@ def searchReviewTitles():
         print(row)
 
 #Main menu
-def sql_Menu
+def sql_menu
+
 while True:
     print("\n Welcome to the SQL Main Menu.")
     print("1. Insert a new record")
