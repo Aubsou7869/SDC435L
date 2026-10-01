@@ -1,8 +1,9 @@
 # SDC435L Group Project
 
 1. Why did you store the entire GitHub record as JSON text in Cassandra instead of storing the individual fields as Cassandra columns?
+
     We chose this route due to the assignment guidelines and our python program ideal of allowing a general databases CRUD ui for any user importing the json files. However, The alternative proposed would be considered if we were creating a Cassandra specific database management and CRUD program
-2. What does IF NOT EXISTS accomplish in your Cassandra INSERT, and what does result.was_applied tell you?
+3. What does IF NOT EXISTS accomplish in your Cassandra INSERT, and what does result.was_applied tell you?
 
     IF NOT EXISTS is being used to reinforce duplication acknowledgements while inserting. This helps when importing the json files
 4. Your search and grouping functions read essentially the entire Cassandra table and perform the analysis in Python. Why did you choose to do that rather than design Cassandra queries for the operation?
