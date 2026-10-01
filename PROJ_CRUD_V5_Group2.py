@@ -2063,6 +2063,325 @@ main()
 session.close()
 driver.close()
 
+#SQL Database
+import sqlite3
+import json
+
+#Connect to the SQLite database
+print("Connecting to local SQLite database...")
+db = sqlite3.connect("EN_ReviewData.db")
+db.execute("PRAGMA foreign_keys = ON;")
+
+# *** CREATE SECTION ***
+#Create the Reviewers table
+db.execute("""
+CREATE TABLE IF NOT EXISTS Reviewers (
+    reviewer_id TEXT PRIMARY KEY
+);
+""")
+
+#Create the Categories table
+db.execute("""
+CREATE TABLE IF NOT EXISTS Categories (
+    product_category TEXT PRIMARY KEY
+);
+""")
+
+#Create the Products table
+db.execute("""
+CREATE TABLE IF NOT EXISTS Products (
+    product_id TEXT PRIMARY KEY,
+    product_category TEXT,
+    FOREIGN KEY(product_category) REFERENCES Categories(product_category)
+);
+""")
+
+#Create the Reviews table
+db.execute("""
+CREATE TABLE IF NOT EXISTS Reviews (
+    review_id TEXT PRIMARY KEY,
+    product_id TEXT,
+    reviewer_id TEXT,
+    stars INTEGER,
+    review_body TEXT,
+    review_title TEXT,
+    FOREIGN KEY(product_id) REFERENCES Products(product_id),
+    FOREIGN KEY(reviewer_id) REFERENCES Reviewers(reviewer_id)
+);
+""")
+
+db.commit()
+print("Tables created successfully!")
+
+#Insert data from the JSON file into the tables
+print("Importing data from file...")
+
+for line in open("dataset_en_dev.json", "r"):
+    dataSet = json.loads(line)
+
+    reviewer_id = dataSet["reviewer_id"]
+    product_category = dataSet["product_category"]
+    product_id = dataSet["product_id"]
+    review_id = dataSet["review_id"]
+    stars = int(dataSet["stars"])
+    review_body = dataSet["review_body"]
+    review_title = dataSet["review_title"]
+
+    db.execute(
+        "INSERT OR IGNORE INTO Reviewers (reviewer_id) VALUES (?);",
+        (reviewer_id,)
+    )
+
+    db.execute(
+        "INSERT OR IGNORE INTO Categories (product_category) VALUES (?);",
+        (product_category,)
+    )
+
+    db.execute(
+        "INSERT OR IGNORE INTO Products (product_id, product_category) VALUES (?, ?);",
+        (product_id, product_category)
+    )
+
+    db.execute(
+        """INSERT OR IGNORE INTO Reviews
+        (review_id, product_id, reviewer_id, stars, review_body, review_title)
+        VALUES (?, ?, ?, ?, ?, ?);""",
+        (review_id, product_id, reviewer_id, stars, review_body, review_title)
+    )
+
+db.commit()
+print("Data imported successfully!")
+
+
+# *** READ SECTION ***
+
+#Display categories with at least a user-entered number of products
+def displayProductCount():
+    minimum = int(input("\nWhat is the minimum product count?\n"))
+
+    print("\nDisplaying Categories with " + str(minimum) + "+ products:")
+
+    query = """
+    SELECT product_category, COUNT(product_id)
+    FROM Products
+    GROUP BY product_category
+    HAVING COUNT(product_id) >= ?;
+    """
+
+    resultSet = db.execute(query, (minimum,))
+
+    for row in resultSet:
+        print(row)
+
+
+#Allow the user to enter and run a SELECT statement
+def enterQuery():
+    query = input("\nType a SELECT statement:\n")
+
+    try:
+        resultSet = db.execute(query)
+
+        for row in resultSet:
+            print(row)
+
+    except sqlite3.Error as error:
+        print("SQLite Error:", error)
+
+
+# *** UPDATE / INSERT SECTION ***
+
+#Allow the user to insert a row into any table
+def insertRecord():
+    print("\nChoose a table:")
+    print("1. Reviewers")
+    print("2. Categories")
+    print("3. Products")
+    print("4. Reviews")
+
+    choice = input()
+
+    try:
+        if choice == "1":
+            reviewer_id = input("Enter reviewer_id: ")
+
+            db.execute(
+                "INSERT INTO Reviewers (reviewer_id) VALUES (?);",
+                (reviewer_id,)
+            )
+
+        elif choice == "2":
+            product_category = input("Enter product_category: ")
+
+            db.execute(
+                "INSERT INTO Categories (product_category) VALUES (?);",
+                (product_category,)
+            )
+
+        elif choice == "3":
+            product_id = input("Enter product_id: ")
+            product_category = input("Enter product_category: ")
+
+            db.execute(
+                "INSERT INTO Products (product_id, product_category) VALUES (?, ?);",
+                (product_id, product_category)
+            )
+
+        elif choice == "4":
+            review_id = input("Enter review_id: ")
+            product_id = input("Enter product_id: ")
+            reviewer_id = input("Enter reviewer_id: ")
+            stars = int(input("Enter stars: "))
+            review_body = input("Enter review_body: ")
+            review_title = input("Enter review_title: ")
+
+            db.execute(
+                """INSERT INTO Reviews
+                (review_id, product_id, reviewer_id, stars, review_body, review_title)
+                VALUES (?, ?, ?, ?, ?, ?);""",
+                (review_id, product_id, reviewer_id, stars, review_body, review_title)
+            )
+
+        else:
+            print("Invalid table choice.")
+            return
+
+        db.commit()
+        print("Record inserted successfully!")
+
+    except sqlite3.Error as error:
+        print("SQLite Error:", error)
+
+
+# *** DELETE SECTION ***
+
+#Delete all reviews for a user-entered product category
+def deleteReviews():
+    category = input("\nEnter the product category to delete reviews from:\n")
+
+    query = """
+    DELETE FROM Reviews
+    WHERE product_id IN (
+        SELECT product_id
+        FROM Products
+        WHERE product_category = ?
+    );
+    """
+
+    resultSet = db.execute(query, (category,))
+    db.commit()
+
+    print(resultSet.rowcount, "review(s) deleted.")
+
+
+#Delete all tables in the database
+def deleteTables():
+    answer = input("\nAre you sure you want to delete all tables? (yes/no): ")
+
+    if answer.lower() == "yes":
+        db.execute("DROP TABLE IF EXISTS Reviews;")
+        db.execute("DROP TABLE IF EXISTS Products;")
+        db.execute("DROP TABLE IF EXISTS Reviewers;")
+        db.execute("DROP TABLE IF EXISTS Categories;")
+        db.commit()
+
+        print("All tables deleted!")
+
+    else:
+        print("Delete canceled.")
+
+#Feature 1: Display reviews by star rating
+def displayReviewsByStars():
+    stars = int(input("\nEnter a star rating from 1 to 5:\n"))
+
+    query = """
+    SELECT review_title, stars
+    FROM Reviews
+    WHERE stars = ?;
+    """
+
+    resultSet = db.execute(query, (stars,))
+
+    print("\nReviews with", stars, "star(s):")
+    for row in resultSet:
+        print(row)
+
+#Feature 2: Display the total number of reviews
+def displayTotalReviews():
+    query = """
+    SELECT COUNT(*)
+    FROM Reviews;
+    """
+
+    resultSet = db.execute(query)
+    total = resultSet.fetchone()[0]
+
+    print("\nTotal number of reviews:", total)
+
+#Feature 3: Search review titles by a keyword
+def searchReviewTitles():
+    keyword = input("\nEnter a word to search for in review titles:\n")
+
+    query = """
+    SELECT review_title, stars
+    FROM Reviews
+    WHERE review_title LIKE ?;
+    """
+
+    resultSet = db.execute(query, ("%" + keyword + "%",))
+
+    print("\nMatching reviews:")
+    for row in resultSet:
+        print(row)
+
+#Main menu
+while True:
+    print("\n.")
+    print("1. Insert a new record")
+    print("2. Display product count per category")
+    print("3. Enter a query")
+    print("4. Delete reviews from a category")
+    print("5. Delete all tables")
+    print("6. Display reviews by star rating")
+    print("7. Display total number of reviews")
+    print("8. Search review titles")
+    print("9. Exit the program")
+
+    menu = input()
+
+    if menu == "1":
+        insertRecord()
+
+    elif menu == "2":
+        displayProductCount()
+
+    elif menu == "3":
+        enterQuery()
+
+    elif menu == "4":
+        deleteReviews()
+
+    elif menu == "5":
+        deleteTables()
+
+    elif menu == "6":
+        displayReviewsByStars()
+
+    elif menu == "7":
+        displayTotalReviews()
+
+    elif menu == "8":
+        searchReviewTitles()
+
+    elif menu == "9":
+        print("Closing program...")
+        break
+
+    else:
+        print("Invalid menu option.")
+
+#Close connection to database
+db.close()
+
 
 
 def main():
