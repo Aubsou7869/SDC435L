@@ -1,4 +1,4 @@
-"""Group 2 redis, mongodb,Cassandra program v3 now includes Cassandra section"""
+"""Group 2 redis, mongodb,Cassandra program v5 now includes Cassandra section"""
 ##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--## #also run python -m pip install cassandra-driver
 import json
 import os
