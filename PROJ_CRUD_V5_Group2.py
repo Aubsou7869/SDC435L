@@ -2391,6 +2391,7 @@ def main():
         print("2) MongoDB")
         print("3) Cassandra")
         print("4) Neo4j")
+        print("5) SQL")
         print("0) Exit Application")
         choice = input("Select a database: ").strip().upper()
         if choice == "1":
@@ -2404,11 +2405,14 @@ def main():
             break
         elif choice == "4":
             neo4j_menu()
+            break
+        elif choice == "5":
+            sql_menu()
             break        
         elif choice in ["0", "E"]:
             break
         else:
-            print("Please select your desired database. enter 1, 2, 3, 4, or 0.")
+            print("Please select your desired database. enter 1, 2, 3, 4, 5, or 0.")
     print("APPLICATION EXITED. GOODBYE.")
 
 
