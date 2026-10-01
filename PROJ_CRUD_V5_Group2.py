@@ -2,8 +2,8 @@
 ##--- run command prompt and run "python -m pip install redis pymongo to ensure python program can function propperly--## #also run python -m pip install cassandra-driver
 import json
 import os
-#import redis
-#import pymongo
+import redis
+import pymongo
 
 #Sep datasets i/o to stop sample and full records from overwrting each other.
 DATASETS = ["Commits", "Contents", "Files", "Languages", "Licenses",
