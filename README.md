@@ -1,11 +1,11 @@
 # SDC435L Group Project
 
 1. Why did you store the entire GitHub record as JSON text in Cassandra instead of storing the individual fields as Cassandra columns?
-
+    
 2. What does IF NOT EXISTS accomplish in your Cassandra INSERT, and what does result.was_applied tell you?
-
+    IF NOT EXISTS is being used to reinforce duplication acknowledgements while inserting. This helps when importing the json files
 3. Your search and grouping functions read essentially the entire Cassandra table and perform the analysis in Python. Why did you choose to do that rather than design Cassandra queries for the operation?
-
+     We decided to allow larger group and searching iterations so these two options can count as an addition "reference" help funtion for the user to copy and paste or specifically locate the letter for letter file name while working in the python program.
 ## GitHub Archive Redis, Cassandra, MONGODB, Neo4j, SQL Application ##
 
 This project is a Python application that connects to a Redis key-value database, MONGO database, Cassandra database, Neo4j database, and the SQL database working with the GitHub Archive repository data provided.
