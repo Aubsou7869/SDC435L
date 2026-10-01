@@ -1,6 +1,6 @@
 # SDC435L Group Project
 
-## GitHub Archive Redis, Cassandra, MONGODB, Neo4j Application##
+## GitHub Archive Redis, Cassandra, MONGODB, Neo4j, SQL Application ##
 
 This project is a Python application that connects to a Redis key-value database, MONGO database, and the Cassandra database working with the GitHub Archive repository data provided.
 
